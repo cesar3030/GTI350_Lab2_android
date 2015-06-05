@@ -40,6 +40,22 @@ class Shape {
 		return true;
 	}
 
+	/**
+	 * Method who apply a translation to all the points of a shape
+	 * @param translation the Vector2D that represents the translation
+	 */
+	public void applyTranslation(Vector2D translation){
+
+		for(Point2D point : points){
+
+			//We calculate the coordinates after the translation
+			float newX= point.x()+translation.x();
+			float newY= point.y()+translation.y();
+
+			//We apply the new coordinates to the point
+			point.copy(newX,newY);
+		}
+	}
 
 	public int getNumPoints() { return points.size(); }
 	public ArrayList< Point2D > getPoints() { return points; }
