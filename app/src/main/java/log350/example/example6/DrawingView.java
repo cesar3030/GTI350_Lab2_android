@@ -4,8 +4,11 @@ package log350.example.example6;
 import java.util.ArrayList;
 //import java.util.List;
 
+import android.app.AlertDialog;
 import android.content.Context;
 //import android.graphics.Matrix;
+import android.content.DialogInterface;
+import android.database.Cursor;
 import android.graphics.Canvas;
 //import android.graphics.Rect;
 //import android.graphics.Path;
@@ -193,6 +196,7 @@ public class DrawingView extends View {
     static final int MODE_SHAPE_MANIPULATION = 2; // the user is translating/rotating/scaling a shape
     static final int MODE_LASSO = 3; // the user is drawing a lasso to select shapes
     static final int MODE_DELETE = 4; //The user is deleting shapes
+    static final int MODE_CREATE = 5; //The user is Creating a shapes
 
     int currentMode = MODE_NEUTRAL;
 
@@ -201,6 +205,7 @@ public class DrawingView extends View {
 
     MyButton lassoButton = new MyButton("Lasso", 10, 70, 140, 140);
     MyButton deleteButton = new MyButton("Delete", 10, 220, 140, 140);
+    MyButton createButton = new MyButton("Create", 10, 370, 140, 140);
 
     OnTouchListener touchListener;
 
@@ -273,6 +278,7 @@ public class DrawingView extends View {
 
         lassoButton.draw(gw, currentMode == MODE_LASSO);
         deleteButton.draw(gw,currentMode == MODE_DELETE);
+        createButton.draw(gw,currentMode == MODE_CREATE);
 
         if (currentMode == MODE_LASSO) {
             MyCursor lassoCursor = cursorContainer.getCursorByType(MyCursor.TYPE_DRAGGING, 0);
@@ -375,10 +381,13 @@ public class DrawingView extends View {
                                     currentMode = MODE_DELETE;
                                     cursor.setType(MyCursor.TYPE_BUTTON);
                                 }
+                                else if(createButton.contains(p_pixels)){
+                                    currentMode = MODE_CREATE;
+                                    cursor.setType(MyCursor.TYPE_BUTTON);
+                                }
                                 else if (indexOfShapeBeingManipulated >= 0) {
                                     currentMode = MODE_SHAPE_MANIPULATION;
                                     cursor.setType(MyCursor.TYPE_DRAGGING);
-                                    Log.d("tag", "on est sur une shape");
                                 } else {
                                     currentMode = MODE_CAMERA_MANIPULATION;
                                     cursor.setType(MyCursor.TYPE_DRAGGING);
@@ -544,7 +553,48 @@ public class DrawingView extends View {
                                 }
                             }
                             break;
+                        case MODE_CREATE:
+                            //If we release the button while there is fingers in the screen
+                            if(type == MotionEvent.ACTION_UP && cursor.getType() == MyCursor.TYPE_BUTTON && cursorContainer.getNumCursors() > 1){
+
+                                //We use the convex method if the shape has at least 4 sides
+                                if(cursorContainer.getNumCursors()>=5){
+
+                                    ArrayList< Point2D > points = new ArrayList<Point2D>();
+
+                                    for(int i=1; i < cursorContainer.getNumCursors();i++){
+                                        points.add(cursorContainer.getCursorByIndex(i).getCurrentPosition());
+                                        //cursorContainer.removeCursorByIndex(cursorIndex);
+                                    }
+
+                                    points = Point2DUtil.computeConvexHull(points);
+
+                                    shapeContainer.addShape(points);
+                                }
+                                else if(cursorContainer.getNumCursors()==4){ //If the shape has 3 sides we don t need to use the convex method
+
+                                    ArrayList< Point2D > points = new ArrayList<Point2D>();
+
+                                    for(int i=1; i < cursorContainer.getNumCursors();i++){
+                                        points.add(cursorContainer.getCursorByIndex(i).getCurrentPosition());
+                                        //cursorContainer.removeCursorByIndex(cursorIndex);
+                                    }
+
+                                    shapeContainer.addShape(points);
+                                }
+
+                            }
+                            else if (type == MotionEvent.ACTION_UP) {
+                                cursorContainer.removeCursorByIndex(cursorIndex);
+                                if (cursorContainer.getNumCursors() == 0) {
+                                    currentMode = MODE_NEUTRAL;
+                                }
+                            }
+                            break;
+
                     }
+
+                    Log.i("Nb cursor: ", Integer.toString(cursorContainer.getNumCursors()));
 
                     v.invalidate();
 
