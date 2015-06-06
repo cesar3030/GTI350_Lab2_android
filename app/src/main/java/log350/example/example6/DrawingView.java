@@ -192,12 +192,15 @@ public class DrawingView extends View {
     static final int MODE_CAMERA_MANIPULATION = 1; // the user is panning/zooming the camera
     static final int MODE_SHAPE_MANIPULATION = 2; // the user is translating/rotating/scaling a shape
     static final int MODE_LASSO = 3; // the user is drawing a lasso to select shapes
+    static final int MODE_DELETE = 4; //The user is deleting shapes
+
     int currentMode = MODE_NEUTRAL;
 
     // This is only used when currentMode==MODE_SHAPE_MANIPULATION, otherwise it is equal to -1
     int indexOfShapeBeingManipulated = -1;
 
     MyButton lassoButton = new MyButton("Lasso", 10, 70, 140, 140);
+    MyButton deleteButton = new MyButton("Delete", 10, 220, 140, 140);
 
     OnTouchListener touchListener;
 
@@ -269,6 +272,7 @@ public class DrawingView extends View {
         gw.setCoordinateSystemToPixels();
 
         lassoButton.draw(gw, currentMode == MODE_LASSO);
+        deleteButton.draw(gw,currentMode == MODE_DELETE);
 
         if (currentMode == MODE_LASSO) {
             MyCursor lassoCursor = cursorContainer.getCursorByType(MyCursor.TYPE_DRAGGING, 0);
@@ -360,11 +364,18 @@ public class DrawingView extends View {
                             if (cursorContainer.getNumCursors() == 1 && type == MotionEvent.ACTION_DOWN) {
                                 Point2D p_pixels = new Point2D(x, y);
                                 Point2D p_world = gw.convertPixelsToWorldSpaceUnits(p_pixels);
+
                                 indexOfShapeBeingManipulated = shapeContainer.indexOfShapeContainingGivenPoint(p_world);
+
                                 if (lassoButton.contains(p_pixels)) {
                                     currentMode = MODE_LASSO;
                                     cursor.setType(MyCursor.TYPE_BUTTON);
-                                } else if (indexOfShapeBeingManipulated >= 0) {
+                                }
+                                else if(deleteButton.contains(p_pixels)){
+                                    currentMode = MODE_DELETE;
+                                    cursor.setType(MyCursor.TYPE_BUTTON);
+                                }
+                                else if (indexOfShapeBeingManipulated >= 0) {
                                     currentMode = MODE_SHAPE_MANIPULATION;
                                     cursor.setType(MyCursor.TYPE_DRAGGING);
                                     Log.d("tag", "on est sur une shape");
@@ -420,6 +431,7 @@ public class DrawingView extends View {
                                 );
                             }
                             else if (cursorContainer.getNumCursors() == 1 && type == MotionEvent.ACTION_MOVE) {
+
                                 //We get the cursor that refers to the finger who is on the screen
                                 MyCursor cursor0 = cursorContainer.getCursorByIndex(0);
 
@@ -494,6 +506,38 @@ public class DrawingView extends View {
                                         }
                                     }
                                 }
+                                cursorContainer.removeCursorByIndex(cursorIndex);
+                                if (cursorContainer.getNumCursors() == 0) {
+                                    currentMode = MODE_NEUTRAL;
+                                }
+                            }
+                            break;
+
+                        case MODE_DELETE:
+                            if(cursorContainer.getNumCursors()==1 && selectedShapes.size()>0){
+                                int size= selectedShapes.size();
+                                for(int i=size-1; i>=0; i--){
+
+                                    Shape shape =selectedShapes.get(i);
+                                    //We delete the shape from the container
+                                    shapeContainer.removeShape(shape);
+                                    //We delete the shape from the list of selected shapes
+                                    selectedShapes.remove(i);
+                                }
+                            }
+                            else if(cursorContainer.getNumCursors() == 2 && type == MotionEvent.ACTION_DOWN){
+                                //We get the cursor that refers to the finger who is on the screen
+                                MyCursor cursor0 = cursorContainer.getCursorByIndex(1);
+
+                                //We check if at the finger position there is a shape
+                                int indexSelectedShape = shapeContainer.indexOfShapeContainingGivenPoint(cursor0.getCurrentPosition());
+
+                                //If there is a shape, we delete it
+                                if(indexSelectedShape>-1){
+                                    shapeContainer.removeShape(indexSelectedShape);
+                                }
+                            }
+                            else if (type == MotionEvent.ACTION_UP) {
                                 cursorContainer.removeCursorByIndex(cursorIndex);
                                 if (cursorContainer.getNumCursors() == 0) {
                                     currentMode = MODE_NEUTRAL;

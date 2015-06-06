@@ -36,5 +36,22 @@ class ShapeContainer {
 			rect.bound( s.getBoundingRectangle() );
 		return rect;
 	}
+
+	/**
+	 * Method that removes the shape at the given index of the list of shapes
+	 * @param index
+	 */
+	public void removeShape(int index){
+		shapes.remove(index);
+	}
+
+	/**
+	 * Method that removes the shape at the given index of the list of shapes
+	 * @param shape, the Shape Object needed to be delete
+	 */
+	public void removeShape(Shape shape){
+		int index = shapes.indexOf(shape);
+		shapes.remove(index);
+	}
 }
 
