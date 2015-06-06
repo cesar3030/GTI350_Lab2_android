@@ -465,10 +465,10 @@ public class DrawingView extends View {
                                     Shape selectedShape = shapeContainer.getShape(indexSelectedShape);
 
                                     //Point where the translation is from
-                                    Point2D start = cursor0.getPreviousPosition();
+                                    Point2D start = gw.convertPixelsToWorldSpaceUnits(cursor0.getPreviousPosition());
 
                                     //Point where the translation ends
-                                    Point2D end = cursor0.getCurrentPosition();
+                                    Point2D end = gw.convertPixelsToWorldSpaceUnits(cursor0.getCurrentPosition());
 
                                     //We calculate the translation that it has been done
                                     Vector2D translation = Point2D.diff(end, start);
@@ -539,7 +539,7 @@ public class DrawingView extends View {
                                 MyCursor cursor0 = cursorContainer.getCursorByIndex(1);
 
                                 //We check if at the finger position there is a shape
-                                int indexSelectedShape = shapeContainer.indexOfShapeContainingGivenPoint(cursor0.getCurrentPosition());
+                                int indexSelectedShape = shapeContainer.indexOfShapeContainingGivenPoint(gw.convertPixelsToWorldSpaceUnits(cursor0.getCurrentPosition()));
 
                                 //If there is a shape, we delete it
                                 if(indexSelectedShape>-1){
@@ -563,7 +563,7 @@ public class DrawingView extends View {
                                     ArrayList< Point2D > points = new ArrayList<Point2D>();
 
                                     for(int i=1; i < cursorContainer.getNumCursors();i++){
-                                        points.add(cursorContainer.getCursorByIndex(i).getCurrentPosition());
+                                        points.add(gw.convertPixelsToWorldSpaceUnits(cursorContainer.getCursorByIndex(i).getCurrentPosition()));
                                         //cursorContainer.removeCursorByIndex(cursorIndex);
                                     }
 
@@ -576,12 +576,14 @@ public class DrawingView extends View {
                                     ArrayList< Point2D > points = new ArrayList<Point2D>();
 
                                     for(int i=1; i < cursorContainer.getNumCursors();i++){
-                                        points.add(cursorContainer.getCursorByIndex(i).getCurrentPosition());
+                                        points.add(gw.convertPixelsToWorldSpaceUnits(cursorContainer.getCursorByIndex(i).getCurrentPosition()));
                                         //cursorContainer.removeCursorByIndex(cursorIndex);
+
                                     }
 
                                     shapeContainer.addShape(points);
                                 }
+
 
                             }
                             else if (type == MotionEvent.ACTION_UP) {
