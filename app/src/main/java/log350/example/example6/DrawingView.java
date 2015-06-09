@@ -532,6 +532,11 @@ public class DrawingView extends View {
                                     shapeContainer.removeShape(shape);
                                     //We delete the shape from the list of selected shapes
                                     selectedShapes.remove(i);
+                                    
+                                    cursorContainer.removeCursorByIndex(cursorIndex);
+                                    if (cursorContainer.getNumCursors() == 0) {
+                                        currentMode = MODE_NEUTRAL;
+                                    }
                                 }
                             }
                             else if(cursorContainer.getNumCursors() == 2 && type == MotionEvent.ACTION_DOWN){
@@ -554,12 +559,13 @@ public class DrawingView extends View {
                             }
                             break;
                         case MODE_CREATE:
-                            //If we release the button while there is fingers in the screen
+                            //If we release the button create while there is fingers in the screen
                             if(type == MotionEvent.ACTION_UP && cursor.getType() == MyCursor.TYPE_BUTTON && cursorContainer.getNumCursors() > 1){
 
                                 //We use the convex method if the shape has at least 4 sides
                                 if(cursorContainer.getNumCursors()>=5){
 
+                                    //Arraylist that contains all the positions of the fingers used to draw the shape
                                     ArrayList< Point2D > points = new ArrayList<Point2D>();
 
                                     for(int i=1; i < cursorContainer.getNumCursors();i++){
@@ -569,26 +575,29 @@ public class DrawingView extends View {
 
                                     points = Point2DUtil.computeConvexHull(points);
 
+                                    //We add the new shape in the container by giving the arraylist of points
                                     shapeContainer.addShape(points);
                                 }
                                 else if(cursorContainer.getNumCursors()==4){ //If the shape has 3 sides we don t need to use the convex method
 
+                                    //Arraylist that contains all the positions of the fingers used to draw the shape
                                     ArrayList< Point2D > points = new ArrayList<Point2D>();
 
+                                    //We store the postion of all the fingers in the screen but not the one who's on the button(index=0)
                                     for(int i=1; i < cursorContainer.getNumCursors();i++){
                                         points.add(gw.convertPixelsToWorldSpaceUnits(cursorContainer.getCursorByIndex(i).getCurrentPosition()));
-                                        //cursorContainer.removeCursorByIndex(cursorIndex);
-
                                     }
-
+                                    //We add the new shape in the container by giving the arraylist of points
                                     shapeContainer.addShape(points);
                                 }
 
+                                //We delete the cursor "ACTION_UP" from the container
+                                cursorContainer.removeCursorByIndex(cursorIndex);
 
                             }
                             else if (type == MotionEvent.ACTION_UP) {
                                 cursorContainer.removeCursorByIndex(cursorIndex);
-                                if (cursorContainer.getNumCursors() == 0) {
+                                if (cursorContainer.getNumCursors() == 0 || cursor.getType() == MyCursor.TYPE_BUTTON) {
                                     currentMode = MODE_NEUTRAL;
                                 }
                             }
